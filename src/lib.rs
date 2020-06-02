@@ -103,7 +103,7 @@ pub fn value_to_jsvalue(value:Value)->JsValue{
 }
 
 #[wasm_bindgen]
-pub fn eval(input:JsValue, query:&str) -> Result<JsValue,JsValue>{
+pub fn eval_query(input:JsValue, query:&str) -> Result<JsValue,JsValue>{
     //let mut registry = REGISTRY.lock().map_err(|e| JsValue::from(format!("Registry lock failed: {}",e)))?;
     let input = jsvalue_to_value(input).map_err(|e| format!("{}",e))?;
     let result=REGISTRY.with(|registry|{
