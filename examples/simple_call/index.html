@@ -15,8 +15,13 @@
 
         var result = eval_query("world", "hello");
         console.log(`result = ${result}`);
+
         register("root","alert", function(x){alert(x);});
         result = eval_query("world again", "hello/alert");
+        console.log(`result = ${result}`);
+
+        register("root","alert2", function(x,y){alert(x+"; "+y);});
+        result = eval_query("world again with parameter", "hello/alert2-PARAMETER");
         console.log(`result = ${result}`);
       }
 

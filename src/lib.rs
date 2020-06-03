@@ -49,12 +49,18 @@ pub fn register_hello() {
 struct JsFunction(js_sys::Function);
 
 impl CallableAction<Value> for JsFunction{
-    fn call_action(&self, input:Value, _arguments:&Vec<ActionParameter>) -> Result<Value, Error>{
+    fn call_action(&self, input:Value, arguments:&Vec<ActionParameter>) -> Result<Value, Error>{
         let f_input:JsValue = value_to_jsvalue(input);
-        let mut arguments = js_sys::Array::of1(&f_input);
+        let mut js_arguments = js_sys::Array::of1(&f_input);
+        for (i,arg) in arguments.iter().enumerate(){
+            match arg{
+                ActionParameter::String(arg,_) => js_arguments.push(&JsValue::from_str(&arg)),
+                ActionParameter::Link(arg,pos) => Err(Error::General{message:format!("Link argument not supported (arg. {} at {})",i+1,pos)})?,
+            };
+        }
         let this = JsValue::NULL;
 
-        let out = self.0.apply(&this, &arguments).map_err(|e| Error::General{message:format!("Execution error: {:?}",e)})?;
+        let out = self.0.apply(&this, &js_arguments).map_err(|e| Error::General{message:format!("Execution error: {:?}",e)})?;
         let result = jsvalue_to_value(out)?;
         Ok(result)
     }
