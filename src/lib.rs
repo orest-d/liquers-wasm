@@ -50,7 +50,7 @@ struct JsFunction(js_sys::Function);
 
 impl CallableAction<Value> for JsFunction{
     fn call_action(&self, input:Value, arguments:&Vec<ActionParameter>) -> Result<Value, Error>{
-        let f_input:JsValue = value_to_jsvalue(input);
+        let f_input:JsValue = value_to_jsvalue(input).map_err(|e| Error::General{message:format!("{:?}",e)})?;
         let mut js_arguments = js_sys::Array::of1(&f_input);
         for (i,arg) in arguments.iter().enumerate(){
             match arg{
@@ -98,13 +98,14 @@ pub fn jsvalue_to_value(jsvalue: JsValue) -> Result<Value, Error>{
     }
 }
 
-pub fn value_to_jsvalue(value:Value)->JsValue{
+pub fn value_to_jsvalue(value:Value)->Result<JsValue,JsValue>{
     match value{
-        Value::None => JsValue::null(),
-        Value::Text(x) => JsValue::from_str(&x),
-        Value::Integer(x) => JsValue::from_f64(x as f64),
-        Value::Real(x) => JsValue::from_f64(x),           
-        Value::Bool(x) => JsValue::from_bool(x)
+        Value::None => Ok(JsValue::null()),
+        Value::Text(x) => Ok(JsValue::from_str(&x)),
+        Value::Integer(x) => Ok(JsValue::from_f64(x as f64)),
+        Value::Real(x) => Ok(JsValue::from_f64(x)),
+        Value::Bool(x) => Ok(JsValue::from_bool(x)),
+        Value::Bytes(x) => Err(JsValue::from_str("Bytes value not supported as js value"))
     }
 }
 
@@ -116,7 +117,7 @@ pub fn eval_query(input:JsValue, query:&str) -> Result<JsValue,JsValue>{
         (*registry).borrow_mut().eval(input,query).map_err(|e| format!("{}",e))
     })?;
     //let result = (*registry).eval(input,query).map_err(|e| format!("{}",e))?;
-    Ok(value_to_jsvalue(result))
+    value_to_jsvalue(result)
 }
 
 #[wasm_bindgen]
